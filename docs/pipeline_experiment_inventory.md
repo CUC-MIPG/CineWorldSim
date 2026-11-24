@@ -13,6 +13,7 @@
 | `agents/video_agent.py`, `agents/video_timeline.py` | 事件视频、拼接与时间轴。 |
 | `scripts/resume_vimax_track_ab_failed_videos.py` | 已有节点下的失败视频任务恢复。 |
 | `scripts/run_joint_cameramaster_vimax_case.sh` | 同一 case 串联 CameraMaster 与 ViMax，按阶段标记恢复。 |
+| `ViMax/` | ViMax 基线的独立源码目录，包含原仓库许可证、benchmark、改造后的 pipeline 和评估脚本。 |
 | `evaluation/run_cameramaster_vimax_comparison.py` | 规范化两个方法输出、生成定性对照、执行定量评估、汇总表格。 |
 | `evaluation/run_vimax_bench_eval.py`, `evaluation/run_vimax_planning_judge.py`, `evaluation/sss_smoke_test.py` | 视觉一致性、规划评判、SSS 指标子评估。 |
 | `evaluation/generate_experiment_html.py`, `scripts/generate_experiment_results_overview_html.py` | 实验 HTML 展示入口。 |
@@ -24,7 +25,7 @@
 
 CameraMaster Track A 读取 benchmark 的每个 shot 的 `first_frame` 和 `video_prompt`；每个源 shot 对应一个生成节点和关键帧。Track B 将 `story_overview` 作为叙事内容，shot 文本只用于抽取角色名单，不作为推演事件锚点。Track B 的世界模型分发当前可观察状态，角色基于状态选择动作；StoryControl v4 用叙事证据检查必需事件。`--max-steps` 是最多推演轮数，`--max-nodes` 是最多选取节点数，两者均不是必须达到的数量。若必需事件缺失，覆盖门禁阻止视频生成。
 
-ViMax 的对应定义见其仓库 `docs/vimax_pipeline_evaluation.md`：Track A 将源 shot 文本送入 Script2Video，Track B 只将 `story_overview` 送入 Idea2Video。四组输出应使用同一 benchmark case，评估时按 Track 分组。
+ViMax 的对应定义见 `ViMax/docs/vimax_pipeline_evaluation.md`：Track A 将源 shot 文本送入 Script2Video，Track B 只将 `story_overview` 送入 Idea2Video。四组输出应使用同一 benchmark case，评估时按 Track 分组。
 
 ## 运行与恢复
 
@@ -40,13 +41,15 @@ bash scripts/run_joint_cameramaster_vimax_case.sh \
 
 脚本固定 CameraMaster 使用 `mifage` Python、ViMax 使用 `Vimax` Python；同一命令重跑时利用 `.joint_run_state` 成功标记跳过已完成阶段。CameraMaster 叙事 checkpoint 与 ViMax `--resume` 在各自目录内恢复。StoryControl v3 checkpoint 与 v4 不兼容，需要新的 CameraMaster 输出根目录。标记代表阶段进程成功退出；评估仍需检查视频、manifest 和结果文件。
 
+联合脚本默认读取 `CameraMaster/ViMax/vimax_benchmark`，把 ViMax 新输出写入 `CameraMaster/ViMax/outputs/vimax_benchmark/all_cases`。旧运行仍在 `/data1/AgentG/hhb/ViMax/outputs` 时，可同时设置 `VIMAX_ROOT=/data1/AgentG/hhb/ViMax` 与 `VIMAX_OUTPUT_DIR=/data1/AgentG/hhb/ViMax/outputs/vimax_benchmark/all_cases` 来恢复；不要把新旧输出路径混用。
+
 已有四组输出后运行比较：
 
 ```bash
 python -u evaluation/run_cameramaster_vimax_comparison.py \
-  --benchmark-case /data1/AgentG/hhb/ViMax/vimax_benchmark/artist_extreme_weather_typeA.json \
+  --benchmark-case /data1/AgentG/hhb/CameraMaster/ViMax/vimax_benchmark/artist_extreme_weather_typeA.json \
   --cameramaster-output-root /data1/AgentG/hhb/CameraMaster/outputs/vimax_track_ab_4030_storycontrol_v4/artist_extreme_weather_typeA \
-  --vimax-output-root /data1/AgentG/hhb/ViMax/outputs/vimax_benchmark/all_cases/artist_extreme_weather \
+  --vimax-output-root /data1/AgentG/hhb/CameraMaster/ViMax/outputs/vimax_benchmark/all_cases/artist_extreme_weather \
   --output-dir /data1/AgentG/hhb/CameraMaster/outputs/comparisons/artist_extreme_weather_typeA_v4_vs_vimax \
   --run-all --resume
 ```

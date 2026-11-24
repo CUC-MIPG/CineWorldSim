@@ -3,8 +3,9 @@
 # independently resumable stages.  Run this script on 172.17.34.44.
 set -Eeuo pipefail
 
-CAMERA_MASTER_ROOT="${CAMERA_MASTER_ROOT:-/data1/AgentG/hhb/CameraMaster}"
-VIMAX_ROOT="${VIMAX_ROOT:-/data1/AgentG/hhb/ViMax}"
+SCRIPT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CAMERA_MASTER_ROOT="${CAMERA_MASTER_ROOT:-${SCRIPT_ROOT}}"
+VIMAX_ROOT="${VIMAX_ROOT:-${CAMERA_MASTER_ROOT}/ViMax}"
 BENCHMARK_ROOT="${BENCHMARK_ROOT:-${VIMAX_ROOT}/vimax_benchmark}"
 MIFAGE_PY="${MIFAGE_PY:-/data1/AgentG/anaconda3/envs/mifage/bin/python}"
 VIMAX_PY="${VIMAX_PY:-/data1/AgentG/anaconda3/envs/Vimax/bin/python}"
@@ -43,6 +44,11 @@ Options:
   --log-level LEVEL            Logging level (default: INFO).
   --force                      Run all selected stages again; does not delete outputs.
   -h, --help                   Show this help.
+
+Environment overrides:
+  VIMAX_ROOT                  ViMax source root (default: CameraMaster/ViMax).
+  VIMAX_OUTPUT_DIR            ViMax output root; set both variables to resume
+                              a run made in the former standalone repository.
 
 Recovery policy:
   - A .joint_run_state/<case>/STAGE.done marker is written only after a stage

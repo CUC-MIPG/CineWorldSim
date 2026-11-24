@@ -458,3 +458,16 @@ conda run -n mifage python scripts/run_three_agents.py \
 - `outputs/movie_producer/case_scene_design.json`
 - `outputs/three_agents_case/info_pool/events.jsonl`
 - `outputs/three_agents_case/info_pool/latest_snapshot.json`
+
+## ViMax 基线与对比实验
+
+改造后的 ViMax 基线源码位于根目录 `ViMax/`，作为普通文件夹随本仓库版本化；来源、许可证与提交见 `ViMax/INTEGRATION.md`。CameraMaster 和 ViMax 共用 `ViMax/vimax_benchmark/` 的 case。两方法的 Track A/B 定义、联合运行、断点恢复、定量评估和输出边界见 `docs/pipeline_experiment_inventory.md`。
+
+```bash
+bash scripts/run_joint_cameramaster_vimax_case.sh \
+  --case artist_extreme_weather_typeA.json \
+  --camera-track B --vimax-track both \
+  --max-steps 40 --max-nodes 30
+```
+
+联合脚本默认使用根目录内的 `ViMax/`，CameraMaster 使用 `mifage` 环境、ViMax 使用 `Vimax` 环境。已有独立 ViMax 仓库的运行结果可通过 `VIMAX_ROOT` 和 `VIMAX_OUTPUT_DIR` 显式指定，避免和新输出混用。
