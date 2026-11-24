@@ -461,7 +461,7 @@ conda run -n mifage python scripts/run_three_agents.py \
 
 ## ViMax 基线与对比实验
 
-改造后的 ViMax 基线源码位于根目录 `ViMax/`，作为普通文件夹随本仓库版本化；来源、许可证与提交见 `ViMax/INTEGRATION.md`。CameraMaster 和 ViMax 共用 `ViMax/vimax_benchmark/` 的 case。两方法的 Track A/B 定义、联合运行、断点恢复、定量评估和输出边界见 `docs/pipeline_experiment_inventory.md`。
+改造后的 ViMax 基线源码位于根目录 `ViMax/`，作为普通文件夹随本仓库版本化；来源、许可证与提交见 `ViMax/INTEGRATION.md`。CameraMaster 和 ViMax 共用 `ViMax/vimax_benchmark/` 的 case。完整执行命令、断点恢复、定量评估、指标说明和结果验收见 `docs/run_and_evaluation_guide.md`；架构与交付清单见 `docs/pipeline_experiment_inventory.md`。
 
 ```bash
 bash scripts/run_joint_cameramaster_vimax_case.sh \
