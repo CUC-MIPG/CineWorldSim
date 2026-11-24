@@ -8,3 +8,5 @@
 - 导入方式：从 `7acf108` 执行 `git archive`，因此保留版本化源码和 benchmark JSON，不含独立仓库的 `.git`、生成输出、缓存或本地 `.env`。
 
 在 CineWorldSim 根目录运行 `scripts/run_joint_cameramaster_vimax_case.sh` 时，本目录是默认 ViMax 代码与 benchmark 根。已有独立 ViMax 运行结果仍可通过 `VIMAX_ROOT` 和 `VIMAX_OUTPUT_DIR` 显式引用。ViMax 自身使用 `Vimax` Conda 环境；相关实验协议见 `docs/pipeline_experiment_inventory.md` 和 `docs/vimax_pipeline_evaluation.md`。
+
+集成后的 ViMax 优先保留进程环境变量，再读取本目录 `.env`，最后从 CineWorldSim 根目录 `.env` 补足缺少的变量；两个 `.env` 文件均不进入 Git。

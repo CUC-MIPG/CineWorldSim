@@ -9,7 +9,9 @@ import yaml
 from dotenv import load_dotenv
 from utils.image_selection import image_candidate_count_from_config
 
-load_dotenv(Path(__file__).resolve().parent.parent / ".env", override=False)
+_VIMAX_ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(_VIMAX_ROOT / ".env", override=False)
+load_dotenv(_VIMAX_ROOT.parent / ".env", override=False)
 
 DEFAULT_LLM_MODEL = "gpt-5.5"
 DEFAULT_LLM_MODEL_PROVIDER = "openai"

@@ -251,6 +251,7 @@ def run_case(theme: str, source: Path, case: dict[str, Any], args: argparse.Name
     if args.run:
         try:
             load_dotenv(ROOT / ".env", override=False)
+            load_dotenv(ROOT.parent / ".env", override=False)
             asyncio.run(_run_case_online(case, specs, args))
             manifest["status"] = "complete"
         except Exception as exc:
