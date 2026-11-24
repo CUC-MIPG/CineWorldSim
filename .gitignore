@@ -1,0 +1,43 @@
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+!**/.env.example
+**/*credentials*.json
+**/*secret*.json
+
+# Python and editor caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+.idea/
+.vscode/
+
+# Generated media, model assets, benchmark material, and derived data
+/outputs/
+/backups/
+/MovieBench/
+/tool_hub/models/
+/evaluation/*/
+/rag/indexes/
+/narrative_graph/
+*.pdf
+*.mp4
+*.zip
+
+# Local research drafts and run notes, outside the pipeline delivery
+/CVPR2027/
+/iclr/
+/.agents/
+/.codex
+/conda
+/kling_multiref
+/MINIMAX_H3_*
+/planning.txt
+/findings.md
+/progress.md
+/task_plan.md
+/test.txt

@@ -1,0 +1,20 @@
+{
+  "bgm": {
+    "provider": "ace_step",
+    "hf_repo": "ACE-Step/Ace-Step1.5",
+    "local_model_dir": "/data1/AgentG/hhb/CameraMaster/tool_hub/models/bgm/Ace-Step1.5",
+    "tool_name": "generate_bgm"
+  },
+  "dubbing": {
+    "provider": "omnivoice",
+    "hf_repo": "k2-fsa/OmniVoice",
+    "local_model_dir": "/data1/AgentG/hhb/CameraMaster/tool_hub/models/dubbing/OmniVoice",
+    "tool_name": "generate_dubbing"
+  },
+  "narration": {
+    "provider": "omnivoice",
+    "hf_repo": "k2-fsa/OmniVoice",
+    "local_model_dir": "/data1/AgentG/hhb/CameraMaster/tool_hub/models/dubbing/OmniVoice",
+    "tool_name": "generate_narration"
+  }
+}

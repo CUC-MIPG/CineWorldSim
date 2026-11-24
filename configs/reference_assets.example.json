@@ -1,0 +1,22 @@
+{
+  "character": {
+    "角色名1": [
+      "/abs/path/to/character_refs1.png",
+      "/abs/path/to/character_refs2.png"
+    ],
+    "角色名2": [
+      "/abs/path/to/character_refs3.png",
+      "/abs/path/to/character_refs4.png"
+    ]
+  },
+  "scene": {
+    "Scene1": [
+      "/abs/path/to/scene_refs1.png",
+      "/abs/path/to/scene_refs2.png"
+    ],
+    "Scene2": [
+      "/abs/path/to/scene_refs3.png",
+      "/abs/path/to/scene_refs4.png"
+    ]
+  }
+}

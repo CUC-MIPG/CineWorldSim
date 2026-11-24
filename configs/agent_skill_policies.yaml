@@ -1,0 +1,24 @@
+DirectorAgent:
+  default: cameraatist-story-design
+  allowed:
+    - cameraatist-story-design
+    - cameraatist-scene-creation
+    - cameraatist-world-setup
+
+ShotAgent:
+  default: cameraatist-shot-creation
+  allowed:
+    - cameraatist-shot-creation
+
+StorySupervisorAgent:
+  default: cameraatist-shot-planning
+  allowed:
+    - cameraatist-shot-planning
+    - cameraatist-post-production-planning
+
+VideoAgent:
+  default: h3-prompt-writing
+  allowed:
+    - h3-prompt-writing
+    - cameraatist-event-video-prompt
+    - cameraatist-event-multishot-prompt
