@@ -1,4 +1,6 @@
-# CineWorldSim Command Guide (RAG + Agent Workflow)
+# CineWorldSim：RAG、叙事推演与对比实验
+
+本文前半部分介绍 RAG 和传统多智能体流程；当前叙事世界推演、StoryControl v4、CameraMaster–ViMax 四组实验与统一评估的可执行命令见文末对应章节。更完整的恢复与指标说明见 `docs/run_and_evaluation_guide.md`。
 
 本仓库已经实现：
 
@@ -459,15 +461,91 @@ conda run -n mifage python scripts/run_three_agents.py \
 - `outputs/three_agents_case/info_pool/events.jsonl`
 - `outputs/three_agents_case/info_pool/latest_snapshot.json`
 
-## ViMax 基线与对比实验
+## 叙事世界推演与视频 Pipeline
 
-改造后的 ViMax 基线源码位于根目录 `ViMax/`，作为普通文件夹随本仓库版本化；来源、许可证与提交见 `ViMax/INTEGRATION.md`。CameraMaster 和 ViMax 共用 `ViMax/vimax_benchmark/` 的 case。完整执行命令、断点恢复、定量评估、指标说明和结果验收见 `docs/run_and_evaluation_guide.md`；架构与交付清单见 `docs/pipeline_experiment_inventory.md`。
+当前主流程是：故事文本与角色 → 世界、地点和角色初始化 → 世界模型按轮次分发当前可观察信息 → 角色选择动作 → 动作评估及世界状态更新 → 事件关键帧 → 叙事节点筛选与排序 → 分镜视频与拼接。`--max-steps` 是推演轮数上限，不表示必须运行到该轮；输出的节点数也可能少于上限。
+
+只运行通用故事的世界推演、查看角色动作和 world state：
 
 ```bash
-bash scripts/run_joint_cameramaster_vimax_case.sh \
-  --case artist_extreme_weather_typeA.json \
-  --camera-track B --vimax-track both \
-  --max-steps 40 --max-nodes 30
+cd /data1/AgentG/hhb/CameraMaster
+/data1/AgentG/anaconda3/envs/mifage/bin/python -u scripts/run_dual_backend_narrative_world_pipeline.py \
+  --story-file inputs/demo1_adventure_same_space.txt \
+  --characters 'Mara Venn,Ilya Trent,Nora Hale' \
+  --backend-mode all_banana --max-steps 15 \
+  --output-dir outputs/readme_narrative_world \
+  --strict-online --retries 3 --log-level INFO
 ```
 
-联合脚本默认使用根目录内的 `ViMax/`，CameraMaster 使用 `mifage` 环境、ViMax 使用 `Vimax` 环境。已有独立 ViMax 仓库的运行结果可通过 `VIMAX_ROOT` 和 `VIMAX_OUTPUT_DIR` 显式指定，避免和新输出混用。
+主要查看 `outputs/readme_narrative_world/all_banana/pipeline_result.json`、`narrative_checkpoint.json` 和 `world_state_step*.json`。通用入口默认**不启用** benchmark Track B 的 StoryControl v4。要从推演继续生成分镜视频，使用完整入口：
+
+```bash
+/data1/AgentG/anaconda3/envs/mifage/bin/python -u scripts/run_full_narrative_world_video_pipeline.py \
+  --story-file inputs/demo1_adventure_same_space.txt \
+  --characters 'Mara Venn,Ilya Trent,Nora Hale' \
+  --output-dir outputs/readme_narrative_video \
+  --backend-mode all_banana --path-mode llm --max-steps 15 \
+  --enable-narrative-node-selector --node-selection-mode top_k \
+  --node-min-nodes 1 --node-max-nodes 30 \
+  --max-reference-images 4 --strict-online --retries 3 --log-level INFO
+```
+
+完整入口在 `outputs/readme_narrative_video/all_banana/` 下保存推演、路径编排与 `event_video_pipeline_minimax_h3_vllm_multishot/final_orchestrated_events.mp4`。生成会调用已配置的 LLM、图像和 MiniMax 视频服务；各服务变量见 `.env.example`。完整阶段说明见 `docs/current_pipeline_execution_and_output_reference.md`。
+
+### Benchmark Track B 的 StoryControl 推演
+
+与上面的通用故事入口不同，以下命令只给 CameraMaster `story_overview` 作为剧情内容；benchmark 的 shot 文本仅用于抽取角色名称。StoryControl v4 检查必需剧情事件，缺少证据时在 `story_coverage_failure.json` 列出缺项并阻止视频生成。
+
+```bash
+/data1/AgentG/anaconda3/envs/mifage/bin/python -u scripts/run_vimax_track_ab_pipeline.py \
+  --benchmark-root /data1/AgentG/hhb/CameraMaster/ViMax/vimax_benchmark \
+  --case artist_extreme_weather_typeA.json --track B \
+  --output-root outputs/readme_artist_track_b_v4 \
+  --backend all_banana --max-steps 40 --max-nodes 30 \
+  --max-reference-images 4 --track-b-story-control \
+  --track-b-require-full-coverage --strict-online \
+  --retries 3 --log-level INFO
+```
+
+重点查看 `outputs/readme_artist_track_b_v4/artist_extreme_weather_typeA/track_B/narrative_simulation/all_banana/` 中的 `narrative_checkpoint.json`、`story_control.json` 和 `pipeline_result.json`，以及 `track_B/story_coverage_report.json`、`narrative_nodes.json`、`path_plan.json`、`video/event_video_summary.json`。`--max-nodes 30` 只限制最多选取 30 个节点，不强制凑满 30 个。
+
+## ViMax 基线与统一对比实验
+
+改造后的 ViMax 源码在根目录 `ViMax/`；来源与许可证见 `ViMax/INTEGRATION.md`。两种方法共用 `ViMax/vimax_benchmark/` 的 case。Track A 使用 benchmark 的逐 shot 描述，Track B 只用故事梗概；同一 Track 内比较两种方法。下面的联合脚本使用 `mifage` 运行 CameraMaster、`Vimax` 运行 ViMax。
+
+### 1. 生成四组视频
+
+```bash
+cd /data1/AgentG/hhb/CameraMaster
+export CM_ROOT="$PWD"
+export CM_OUT="$CM_ROOT/outputs/readme_artist_comparison_v4"
+export VIMAX_OUT="$CM_ROOT/ViMax/outputs/vimax_benchmark/readme_artist_comparison"
+export CMP_OUT="$CM_ROOT/outputs/comparisons/readme_artist_comparison_v4"
+
+bash scripts/run_joint_cameramaster_vimax_case.sh \
+  --case artist_extreme_weather_typeA.json \
+  --camera-track both --vimax-track both \
+  --camera-output-root "$CM_OUT" --vimax-output-dir "$VIMAX_OUT" \
+  --backend all_banana --max-steps 40 --max-nodes 30 \
+  --max-reference-images 4 --retries 3 --log-level INFO
+```
+
+`--camera-track both` 必须显式给出：联合脚本默认只运行 CameraMaster Track B。若只做 Track B，可将 `--camera-track` 和 `--vimax-track` 都设为 `B`。ViMax 的独立入口是 `ViMax/scripts/run_vimax_benchmark_pipeline.py`，在线生成需传 `--run --resume`。联合脚本将成功阶段记录在 `$CM_OUT/.joint_run_state/`；中断后原样重跑同一命令以继续，换模型或改变实验条件时请使用新的输出目录。
+
+### 2. 统一评估并生成对照表
+
+四组视频全部完成后运行：
+
+```bash
+/data1/AgentG/anaconda3/envs/mifage/bin/python -u evaluation/run_cameramaster_vimax_comparison.py \
+  --benchmark-case "$CM_ROOT/ViMax/vimax_benchmark/artist_extreme_weather_typeA.json" \
+  --cameramaster-output-root "$CM_OUT/artist_extreme_weather_typeA" \
+  --vimax-output-root "$VIMAX_OUT/artist_extreme_weather" \
+  --output-dir "$CMP_OUT" --run-all --resume --timeout 900
+```
+
+只生成了 Track B 时，在评估命令中加入 `--tracks B`。结果位于 `$CMP_OUT/quantitative/comparison.csv`、`comparison.md`、各方法的 visual/planning/SSS JSON，以及 `$CMP_OUT/qualitative/index.html`。后者按 Track 和镜头序号并排展示视频及分镜文本；视频通过本机链接引用，不随 Git 提交。`--resume` 跳过已有的非空 JSON 子结果，要求复用同一 case、模型和输出目录；需要完全重算时选择新目录。
+
+视觉评估提供 IC、CC、GC；规划 LLM 提供 CBC、NC、PPR、VSU、STQ；SSS_emb 对比代理故事文本与视频重建的 L4 故事 embedding。当前比较入口不计算 NF，表格中的 N/A 不代表 0 分。Track B 缺少源 scene 标签时不把 IC/CC 当作主结果。评估依赖 ViCLIP `/embed`、LLM 和 embedding 服务。
+
+详细的环境设置、ViMax 独立执行、视频失败恢复、StoryControl 覆盖检查、指标解释及结果验收见 `docs/run_and_evaluation_guide.md`；架构与交付清单见 `docs/pipeline_experiment_inventory.md`。旧独立 ViMax 仓库的结果可通过 `VIMAX_ROOT`、`VIMAX_OUTPUT_DIR` 显式引用，避免和根目录 `ViMax/` 的新输出混用。
